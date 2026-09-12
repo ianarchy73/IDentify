@@ -9,7 +9,7 @@ export default function TopBar({ title }: TopBarProps) {
   const { user, logout, isLoading } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
-  const displayName = user?.name || 'Ian Florida';
+  const displayName = user?.name || user?.email?.split('@')[0] || 'Account';
   const initials = displayName
     .split(' ')
     .map((part) => part[0])
@@ -45,7 +45,7 @@ export default function TopBar({ title }: TopBarProps) {
           aria-label={`Open profile menu for ${displayName}`}
           onClick={() => setIsOpen((open) => !open)}
         >
-          <div className="avatar">{initials || 'IF'}</div>
+          <div className="avatar">{initials || 'A'}</div>
         </button>
         {isOpen && (
           <div className="profile-menu" role="menu">

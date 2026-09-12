@@ -233,6 +233,20 @@ select {
   outline: none;
 }
 
+.empty-state {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 8px;
+  padding: 26px 16px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.empty-state strong {
+  color: var(--text);
+}
+
 .page {
   padding: 30px;
   max-width: 1280px;

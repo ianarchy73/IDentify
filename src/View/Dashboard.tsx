@@ -4,60 +4,37 @@ import {
   IconCases,
   IconReports,
 } from '../components/icons';
-import type { RiskLevel, Screen } from '../types';
-
-interface RecentInvestigation {
-  id: number;
-  title: string;
-  url: string;
-  risk: RiskLevel;
-  status: string;
-}
-
-const RECENT_INVESTIGATIONS: RecentInvestigation[] = [
-  {
-    id: 1,
-    title: 'Possible impersonation',
-    url: 'facebook.com/example.profile',
-    risk: 'high',
-    status: 'Investigating',
-  },
-  {
-    id: 2,
-    title: 'Profile image reuse',
-    url: 'facebook.com/sample.account',
-    risk: 'medium',
-    status: 'Evidence collected',
-  },
-  {
-    id: 3,
-    title: 'Previous impersonator',
-    url: 'facebook.com/old.account',
-    risk: 'resolved',
-    status: 'Closed',
-  },
-];
-
-const RISK_LABEL: Record<RiskLevel, string> = { high: 'HIGH', medium: 'MEDIUM', resolved: 'RESOLVED' };
+import { useAuth } from '../contexts/AuthContext';
+import type { Screen } from '../types';
 
 interface DashboardProps {
   onNavigate: (screen: Screen) => void;
 }
 
 export default function Dashboard({ onNavigate }: DashboardProps) {
+  const { user } = useAuth();
+  const displayName = user?.name || user?.email.split('@')[0] || 'there';
+  const initials = displayName
+    .split(' ')
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+  const providerLabel = user?.loginProvider === 'facebook' ? 'Facebook account' : 'Email account';
+
   return (
     <section id="dashboard" className="screen active">
       <div className="welcome">
-        <h1>Good evening, Ian.</h1>
+        <h1>Good evening, {displayName}.</h1>
         <p>Here's the current status of your digital identity.</p>
       </div>
 
       <div className="card identity">
         <div className="idleft">
-          <div className="bigavatar">IF</div>
+          <div className="bigavatar">{initials}</div>
           <div>
-            <div className="idname">Ian Florida</div>
-            <div className="small">Facebook identity profile</div>
+            <div className="idname">{displayName}</div>
+            <div className="small">{providerLabel}</div>
             <div className="verified">
               <span className="dot"></span>Identity profile established
             </div>
@@ -176,22 +153,17 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               </tr>
             </thead>
             <tbody>
-              {RECENT_INVESTIGATIONS.map((row) => (
-                <tr
-                  key={row.id}
-                  className="clickable"
-                  onClick={() => onNavigate('cases')}
-                >
-                  <td>
-                    <div className="case">{row.title}</div>
-                    <div className="url">{row.url}</div>
-                  </td>
-                  <td>
-                    <span className={`badge ${row.risk}`}>{RISK_LABEL[row.risk]}</span>
-                  </td>
-                  <td>{row.status}</td>
-                </tr>
-              ))}
+              <tr>
+                <td colSpan={3}>
+                  <div className="empty-state">
+                    <strong>No investigations yet</strong>
+                    <span>Start by investigating a suspicious profile.</span>
+                    <button className="btn" onClick={() => onNavigate('investigate')}>
+                      Start investigation
+                    </button>
+                  </div>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -243,8 +215,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
 
       <div className="notice">
         <b>Protection is active.</b> Detection results are risk indicators and
-        should be reviewed before taking action. This prototype uses
-        simulated data.
+        should be reviewed before taking action.
       </div>
     </section>
   );
