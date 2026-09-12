@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Login from './components/Login';
 import Sidebar from './components/Sidebar';
 import TopBar from './components/TopBar';
@@ -15,12 +15,42 @@ import Settings from './View/Settings';
 import {
   createEmptyIdentityVerification,
   isVerificationOverdue,
+  type FlaggedImage,
   type IdentityVerificationState,
+  type InvestigationRecord,
   type Screen,
 } from './types';
 import './App.css';
 
 type Stage = 'login' | 'verify' | 'app';
+
+const AUTH_STORAGE_KEY = 'identify-authenticated';
+const IDENTITY_STORAGE_KEY = 'identify-identity-verification';
+const INVESTIGATIONS_STORAGE_KEY = 'identify-investigations';
+const IMAGE_ANALYSES_STORAGE_KEY = 'identify-image-analyses';
+
+function loadIdentity(): IdentityVerificationState {
+  try {
+    const stored = localStorage.getItem(IDENTITY_STORAGE_KEY);
+    return stored ? JSON.parse(stored) as IdentityVerificationState : createEmptyIdentityVerification();
+  } catch {
+    return createEmptyIdentityVerification();
+  }
+}
+
+function loadInitialStage(identity: IdentityVerificationState): Stage {
+  if (localStorage.getItem(AUTH_STORAGE_KEY) !== 'true') return 'login';
+  return identity.status === 'verified' ? 'app' : 'verify';
+}
+
+function loadStoredList<T>(key: string): T[] {
+  try {
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) as T[] : [];
+  } catch {
+    return [];
+  }
+}
 
 const TITLES: Record<Screen, string> = {
   dashboard: 'Dashboard',
@@ -33,14 +63,37 @@ const TITLES: Record<Screen, string> = {
 };
 
 function AppShell() {
-  const [stage, setStage] = useState<Stage>('login');
+  const [identity, setIdentity] = useState<IdentityVerificationState>(loadIdentity);
+  const [stage, setStage] = useState<Stage>(() => loadInitialStage(identity));
   const [screen, setScreen] = useState<Screen>('dashboard');
-  const [identity, setIdentity] = useState<IdentityVerificationState>(
-    createEmptyIdentityVerification(),
+  const [investigations, setInvestigations] = useState<InvestigationRecord[]>(() =>
+    loadStoredList<InvestigationRecord>(INVESTIGATIONS_STORAGE_KEY),
+  );
+  const [imageAnalyses, setImageAnalyses] = useState<FlaggedImage[]>(() =>
+    loadStoredList<FlaggedImage>(IMAGE_ANALYSES_STORAGE_KEY),
   );
 
+  useEffect(() => {
+    localStorage.setItem(IDENTITY_STORAGE_KEY, JSON.stringify(identity));
+  }, [identity]);
+
+  useEffect(() => {
+    localStorage.setItem(INVESTIGATIONS_STORAGE_KEY, JSON.stringify(investigations));
+  }, [investigations]);
+
+  useEffect(() => {
+    localStorage.setItem(IMAGE_ANALYSES_STORAGE_KEY, JSON.stringify(imageAnalyses));
+  }, [imageAnalyses]);
+
   if (stage === 'login') {
-    return <Login onLogin={() => setStage('verify')} />;
+    return (
+      <Login
+        onLogin={() => {
+          localStorage.setItem(AUTH_STORAGE_KEY, 'true');
+          setStage('verify');
+        }}
+      />
+    );
   }
 
   if (stage === 'verify') {
@@ -77,15 +130,25 @@ function AppShell() {
       case 'dashboard':
         return <Dashboard onNavigate={setScreen} />;
       case 'investigate':
-        return <Investigation onNavigate={setScreen} />;
+        return (
+          <Investigation
+            onNavigate={setScreen}
+            onAnalysisRecorded={(record) => setInvestigations((previous) => [record, ...previous])}
+          />
+        );
       case 'image':
-        return <ImageCheck />;
+        return (
+          <ImageCheck
+            savedGallery={imageAnalyses}
+            onGalleryChange={setImageAnalyses}
+          />
+        );
       case 'monitoring':
-        return <Monitoring />;
+        return <Monitoring investigations={investigations} />;
       case 'cases':
-        return <Cases onNavigate={setScreen} />;
+        return <Cases onNavigate={setScreen} investigations={investigations} imageAnalyses={imageAnalyses} />;
       case 'reports':
-        return <Reports />;
+        return <Reports investigations={investigations} imageAnalyses={imageAnalyses} />;
       case 'settings':
         return (
           <Settings
@@ -100,7 +163,21 @@ function AppShell() {
 
   return (
     <div className="app">
-      <Sidebar active={screen} onNavigate={setScreen} />
+      <Sidebar
+        active={screen}
+        onNavigate={setScreen}
+        onLogout={() => {
+          localStorage.removeItem(AUTH_STORAGE_KEY);
+          localStorage.removeItem(IDENTITY_STORAGE_KEY);
+          localStorage.removeItem(INVESTIGATIONS_STORAGE_KEY);
+          localStorage.removeItem(IMAGE_ANALYSES_STORAGE_KEY);
+          setIdentity(createEmptyIdentityVerification());
+          setInvestigations([]);
+          setImageAnalyses([]);
+          setScreen('dashboard');
+          setStage('login');
+        }}
+      />
       <main className="main">
         <TopBar title={TITLES[screen]} />
         <div className="page">{renderScreen()}</div>

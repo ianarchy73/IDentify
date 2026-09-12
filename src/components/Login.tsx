@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { IconLogo } from './icons';
+import TermsAndConditionsModal from './modals/TermsAndConditionsModal';
 
 interface LoginProps {
   onLogin: () => void;
@@ -7,6 +8,9 @@ interface LoginProps {
 
 export default function Login({ onLogin }: LoginProps) {
   const [email, setEmail] = useState('');
+  const [showTerms, setShowTerms] = useState(false);
+
+  const beginSignIn = () => setShowTerms(true);
 
   return (
     <div className="login">
@@ -24,7 +28,7 @@ export default function Login({ onLogin }: LoginProps) {
           type="button"
           className="btn primary"
           style={{ width: '100%', marginTop: 16 }}
-          onClick={onLogin}
+          onClick={beginSignIn}
         >
           Continue with Facebook
         </button>
@@ -39,7 +43,7 @@ export default function Login({ onLogin }: LoginProps) {
           type="button"
           className="btn"
           style={{ width: '100%', marginTop: 10 }}
-          onClick={onLogin}
+          onClick={beginSignIn}
         >
           Sign in
         </button>
@@ -47,6 +51,15 @@ export default function Login({ onLogin }: LoginProps) {
           Prototype only. No real Facebook account connection occurs.
         </p>
       </div>
+      {showTerms && (
+        <TermsAndConditionsModal
+          onClose={() => setShowTerms(false)}
+          onAccept={() => {
+            setShowTerms(false);
+            onLogin();
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1,8 +1,8 @@
 import { useToast } from '../components/toast/ToastContext';
-import type { RiskLevel } from '../types';
+import type { InvestigationRecord, RiskLevel } from '../types';
 
 interface MonitoredTarget {
-  id: number;
+  id: string;
   name: string;
   url: string;
   lastChecked: string;
@@ -10,9 +10,13 @@ interface MonitoredTarget {
   label: string;
 }
 
+interface MonitoringProps {
+  investigations: InvestigationRecord[];
+}
+
 const MONITORED_TARGETS: MonitoredTarget[] = [
   {
-    id: 1,
+    id: '1',
     name: 'example.profile',
     url: 'facebook.com/example.profile',
     lastChecked: 'Today, 8:12 PM',
@@ -20,17 +24,28 @@ const MONITORED_TARGETS: MonitoredTarget[] = [
     label: 'HIGH',
   },
   {
-    id: 2,
+    id: '2',
     name: 'sample.account',
     url: 'facebook.com/sample.account',
     lastChecked: 'Yesterday',
     risk: 'medium',
-    label: 'REVIEW',
+    label: 'MEDIUM',
   },
 ];
 
-export default function Monitoring() {
+export default function Monitoring({ investigations }: MonitoringProps) {
   const showToast = useToast();
+  const monitoredTargets = [
+    ...MONITORED_TARGETS,
+    ...investigations.map((record) => ({
+      id: record.id,
+      name: record.caseLabel,
+      url: record.profileUrl,
+      lastChecked: new Date(record.analyzedAt).toLocaleString(),
+      risk: record.risk,
+      label: record.riskLabel,
+    })),
+  ];
 
   return (
     <section id="monitoring" className="screen active">
@@ -38,7 +53,8 @@ export default function Monitoring() {
         <div>
           <h1>Monitoring</h1>
           <div className="sub">
-            Track known or previously reported identity threats.
+            Re-check profiles you've already flagged, so you don't have to
+            manually revisit each one.
           </div>
         </div>
         <button
@@ -51,17 +67,17 @@ export default function Monitoring() {
 
       <div className="card">
         <div className="head">
-          <h3>Monitored threats</h3>
+          <h3>Monitored profiles</h3>
           <span className="badge resolved">ACTIVE</span>
         </div>
         <table className="table">
           <tbody>
             <tr>
-              <th>Target</th>
+              <th>Suspected profile</th>
               <th>Last checked</th>
-              <th>Status</th>
+              <th>Risk level</th>
             </tr>
-            {MONITORED_TARGETS.map((t) => (
+            {monitoredTargets.map((t) => (
               <tr key={t.id} className="clickable">
                 <td>
                   <b>{t.name}</b>
@@ -78,8 +94,8 @@ export default function Monitoring() {
       </div>
 
       <div className="notice">
-        Monitoring in this prototype represents user-submitted or known
-        targets. It does not crawl the entire Facebook platform.
+        Monitoring only re-checks profiles you've submitted or previously
+        flagged as suspicious. It does not crawl or scan Facebook at large.
       </div>
     </section>
   );

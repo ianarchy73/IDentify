@@ -28,6 +28,21 @@ export interface CaseItem {
   timeline: TimelineEvent[];
 }
 
+export interface InvestigationRecord {
+  id: string;
+  profileUrl: string;
+  reason: string;
+  caseLabel: string;
+  analyzedAt: string;
+  risk: RiskLevel;
+  riskLabel: string;
+  riskScore: number;
+  profileImageFinding: string;
+  nameFinding: string;
+  publicInfoFinding: string;
+  behaviorFinding: string;
+}
+
 // --- Image Check gallery ---
 //
 // Every image run through Image Check gets kept here (in addition to

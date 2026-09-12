@@ -1,17 +1,36 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useToast } from '../components/toast/ToastContext';
 import CustomSelect from '../components/modals/Dropdown';
 import ConfirmModal from '../components/modals/Confirm';
+import type { FlaggedImage, InvestigationRecord } from '../types';
 
 const REPORT_OPTIONS = [
   'CASE-001 · Possible impersonation',
   'CASE-002 · Profile image reuse',
 ];
 
-export default function Reports() {
+interface ReportsProps {
+  investigations: InvestigationRecord[];
+  imageAnalyses: FlaggedImage[];
+}
+
+export default function Reports({ investigations, imageAnalyses }: ReportsProps) {
   const showToast = useToast();
-  const [selected, setSelected] = useState(REPORT_OPTIONS[0]);
+  const reportOptions = [
+    ...REPORT_OPTIONS,
+    ...investigations.map((record) => `${record.id} · ${record.caseLabel}`),
+    ...imageAnalyses.map((image) => `${image.id} · Image analysis: ${image.fileName}`),
+  ];
+  const [selected, setSelected] = useState(reportOptions[0]);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const selectedInvestigation = investigations.find((record) => selected.startsWith(record.id));
+  const selectedImage = imageAnalyses.find((image) => selected.startsWith(image.id));
+
+  useEffect(() => {
+    if (!reportOptions.includes(selected)) {
+      setSelected(reportOptions[0]);
+    }
+  }, [reportOptions, selected]);
 
   return (
     <section id="reports" className="screen active">
@@ -19,30 +38,45 @@ export default function Reports() {
         <div>
           <h1>Report assistant</h1>
           <div className="sub">
-            Prepare an evidence-backed report for review and submission.
+            Turn an evidence case into a structured draft for Meta's reporting process.
           </div>
         </div>
       </div>
 
       <div className="card formcard">
-        <label className="label">Selected case</label>
-        <CustomSelect value={selected} onChange={setSelected} options={REPORT_OPTIONS} />
+        <label className="label">Evidence case</label>
+        <div className="sub">Choose which case this report should be built from.</div>
+        <CustomSelect value={selected} onChange={setSelected} options={reportOptions} />
 
         <label className="label" style={{ marginTop: 16 }}>
           Generated report draft
         </label>
+        <div className="sub" style={{ marginTop: -6, marginBottom: 8 }}>
+          Review this before submitting — it's assembled from the case's evidence and
+          hasn't been sent anywhere yet.
+        </div>
         <div className="report">
-          <b>Subject: Possible Facebook Impersonation</b>
+          <b>
+            Subject: {selectedInvestigation
+              ? selectedInvestigation.caseLabel
+              : selectedImage
+                ? 'Identity analysis evidence'
+                : 'Possible Facebook Impersonation'}
+          </b>
           <br />
           <br />
-          This report concerns a Facebook account suspected of impersonating
-          the established identity of the reporting user.
+          {selectedImage
+            ? 'This evidence record contains an image analysis for review alongside the established identity baseline.'
+            : 'This report concerns a Facebook profile suspected of impersonating the established identity of the reporting user.'}
           <br />
           <br />
-          <b>Suspected account:</b> facebook.com/example.profile
+          <b>{selectedImage ? 'Image record:' : 'Suspected profile:'}</b>{' '}
+          {selectedImage?.fileName ?? selectedInvestigation?.profileUrl ?? 'facebook.com/example.profile'}
           <br />
-          <b>Observed indicators:</b> high profile-image similarity, name
-          similarity, and matching publicly visible information.
+          <b>Observed indicators:</b>{' '}
+          {selectedInvestigation
+            ? `${selectedInvestigation.profileImageFinding}; ${selectedInvestigation.nameFinding}; ${selectedInvestigation.publicInfoFinding}. ${selectedInvestigation.behaviorFinding}.`
+            : selectedImage?.manipulationNotes ?? 'high profile-image similarity, name similarity, and matching publicly visible information.'}
           <br />
           <br />
           <b>Evidence:</b> profile URL, captured screenshots, timestamped

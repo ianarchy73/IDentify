@@ -13,13 +13,24 @@ export default function Settings({ identity, onRequestReverify }: SettingsProps)
   const [monitoringEnabled, setMonitoringEnabled] = useState(true);
   const [evidenceTimestamps, setEvidenceTimestamps] = useState(true);
 
+  const statusLabel =
+    identity.status === 'verified'
+      ? 'Verified'
+      : identity.status === 'pending'
+      ? 'Verification pending'
+      : identity.status === 'expired'
+      ? 'Verification expired'
+      : 'Not verified';
+
+  const statusBadgeClass = identity.status === 'verified' ? 'resolved' : 'high';
+
   return (
     <section id="settings" className="screen active">
       <div className="toolbar">
         <div>
           <h1>Settings</h1>
           <div className="sub">
-            Manage your identity profile and protection preferences.
+            Manage your established identity and protection preferences.
           </div>
         </div>
       </div>
@@ -27,9 +38,7 @@ export default function Settings({ identity, onRequestReverify }: SettingsProps)
       <div className="card formcard">
         <h3 style={{ marginTop: 0 }}>Identity verification</h3>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-          <span className={`badge ${identity.status === 'verified' ? 'resolved' : 'high'}`}>
-            {identity.status === 'verified' ? 'Verified' : 'Not verified'}
-          </span>
+          <span className={`badge ${statusBadgeClass}`}>{statusLabel}</span>
           {identity.nationalId && (
             <span className="sub">
               {NATIONAL_ID_LABELS[identity.nationalId.idType]} on file
@@ -43,8 +52,10 @@ export default function Settings({ identity, onRequestReverify }: SettingsProps)
           </div>
         )}
         <div className="sub" style={{ marginTop: 4 }}>
-          Re-verification is required every {VERIFICATION_VALIDITY_DAYS} days so a
-          hijacked account can't keep using the extension as you indefinitely.
+          This is your established identity — the baseline every suspected profile
+          gets compared against. Re-verification is required every{' '}
+          {VERIFICATION_VALIDITY_DAYS} days so a hijacked account can't keep using
+          the extension as you indefinitely.
         </div>
         <button type="button" className="btn" style={{ marginTop: 14 }} onClick={onRequestReverify}>
           Re-verify now

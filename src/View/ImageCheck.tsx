@@ -38,13 +38,18 @@ function mockAnalyzeImage(): {
   };
 }
 
-export default function ImageCheck() {
+interface ImageCheckProps {
+  savedGallery?: FlaggedImage[];
+  onGalleryChange?: (gallery: FlaggedImage[]) => void;
+}
+
+export default function ImageCheck({ savedGallery = [], onGalleryChange }: ImageCheckProps) {
   const showToast = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<FlaggedImage | null>(null);
-  const [gallery, setGallery] = useState<FlaggedImage[]>([]);
+  const [gallery, setGallery] = useState<FlaggedImage[]>(savedGallery);
   const [activeImage, setActiveImage] = useState<FlaggedImage | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -75,21 +80,31 @@ export default function ImageCheck() {
     };
 
     setResult(flagged);
-    setGallery((prev) => [flagged, ...prev]);
+    setGallery((prev) => {
+      const next = [flagged, ...prev];
+      onGalleryChange?.(next);
+      return next;
+    });
     setAnalyzing(false);
     showToast('Image analyzed');
   };
 
   const handleDelete = (id: string) => {
-    setGallery((prev) => prev.filter((img) => img.id !== id));
+    setGallery((prev) => {
+      const next = prev.filter((img) => img.id !== id);
+      onGalleryChange?.(next);
+      return next;
+    });
     setActiveImage(null);
     showToast('Removed from gallery');
   };
 
   const handleToggleTraining = (id: string) => {
-    setGallery((prev) =>
-      prev.map((img) => (img.id === id ? { ...img, usableForTraining: !img.usableForTraining } : img)),
-    );
+    setGallery((prev) => {
+      const next = prev.map((img) => (img.id === id ? { ...img, usableForTraining: !img.usableForTraining } : img));
+      onGalleryChange?.(next);
+      return next;
+    });
     setActiveImage((prev) => (prev && prev.id === id ? { ...prev, usableForTraining: !prev.usableForTraining } : prev));
   };
 
