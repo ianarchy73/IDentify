@@ -4,7 +4,7 @@ import CaseDetailModal from '../components/modals/CaseDetailModal';
 import EditCaseModal from '../components/modals/Edit';
 import ConfirmModal from '../components/modals/Confirm';
 import { useToast } from '../components/toast/ToastContext';
-import type { CaseItem, RiskLevel, Screen } from '../types';
+import type { CaseItem, FlaggedImage, InvestigationRecord, RiskLevel, Screen } from '../types';
 
 const INITIAL_CASES: CaseItem[] = [
   {
@@ -33,7 +33,7 @@ const INITIAL_CASES: CaseItem[] = [
   {
     id: 'CASE-002',
     title: 'Profile image reuse',
-    url: 'Profile image reuse',
+    url: 'facebook.com/sample.account',
     risk: 'medium',
     riskLabel: 'MEDIUM',
     created: 'Sep 8, 2026',
@@ -52,7 +52,7 @@ const INITIAL_CASES: CaseItem[] = [
   {
     id: 'CASE-003',
     title: 'Previous impersonator',
-    url: 'Previous impersonator',
+    url: 'facebook.com/old.account',
     risk: 'resolved',
     riskLabel: 'RESOLVED',
     created: 'Aug 29, 2026',
@@ -82,9 +82,45 @@ const RISK_FILTERS: RiskFilterOption[] = [
 
 interface CasesProps {
   onNavigate?: (screen: Screen) => void;
+  investigations: InvestigationRecord[];
+  imageAnalyses: FlaggedImage[];
 }
 
-export default function Cases({ onNavigate }: CasesProps) {
+function caseFromInvestigation(record: InvestigationRecord): CaseItem {
+  return {
+    id: record.id,
+    title: record.caseLabel,
+    url: record.profileUrl,
+    risk: record.risk,
+    riskLabel: record.riskLabel,
+    created: new Date(record.analyzedAt).toLocaleDateString(),
+    status: 'Evidence collected',
+    timeline: [
+      { title: 'Profile submitted', detail: `${record.profileUrl} · ${new Date(record.analyzedAt).toLocaleString()}` },
+      { title: 'Risk assessment completed', detail: `${record.riskLabel} risk assessment based on simulated identity signals.` },
+      { title: 'Evidence recorded', detail: `${record.profileImageFinding}; ${record.nameFinding}.` },
+    ],
+  };
+}
+
+function caseFromImage(image: FlaggedImage): CaseItem {
+  return {
+    id: image.id,
+    title: `Image analysis: ${image.fileName}`,
+    url: 'Image Check',
+    risk: image.risk,
+    riskLabel: image.riskLabel,
+    created: new Date(image.uploadedAt).toLocaleDateString(),
+    status: 'Evidence collected',
+    timeline: [
+      { title: 'Image submitted for analysis', detail: `${image.fileName} · ${new Date(image.uploadedAt).toLocaleString()}` },
+      { title: 'Image analysis completed', detail: image.manipulationNotes },
+      { title: 'Evidence recorded', detail: `${image.faceMatchScore}% facial similarity to the verified identity image.` },
+    ],
+  };
+}
+
+export default function Cases({ onNavigate, investigations, imageAnalyses }: CasesProps) {
   const showToast = useToast();
   const [cases, setCases] = useState<CaseItem[]>(INITIAL_CASES);
   const [query, setQuery] = useState('');
@@ -94,6 +130,14 @@ export default function Cases({ onNavigate }: CasesProps) {
   const [pendingDelete, setPendingDelete] = useState<CaseItem | null>(null);
   const [filterOpen, setFilterOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const recordedCases = [...investigations.map(caseFromInvestigation), ...imageAnalyses.map(caseFromImage)];
+    setCases((previous) => {
+      const recordedIds = new Set(recordedCases.map((item) => item.id));
+      return [...previous.filter((item) => !recordedIds.has(item.id)), ...recordedCases];
+    });
+  }, [investigations, imageAnalyses]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -136,8 +180,10 @@ export default function Cases({ onNavigate }: CasesProps) {
     <section id="cases" className="screen active">
       <div className="toolbar">
         <div>
-          <h1>Cases</h1>
-          <div className="sub">Evidence and investigation history.</div>
+          <h1>Evidence cases</h1>
+          <div className="sub">
+            Investigation history and the evidence collected for each suspected profile.
+          </div>
         </div>
         <button className="btn primary" onClick={() => onNavigate?.('investigate')}>
           New investigation
@@ -150,7 +196,7 @@ export default function Cases({ onNavigate }: CasesProps) {
             <IconSearch size={15} className="search-icon" />
             <input
               className="input search-input"
-              placeholder="Search cases by name or URL..."
+              placeholder="Search by case name or suspected profile URL..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
@@ -194,7 +240,7 @@ export default function Cases({ onNavigate }: CasesProps) {
             <tr>
               <th>Case</th>
               <th>Risk</th>
-              <th>Created</th>
+              <th>Opened</th>
               <th>Status</th>
               <th></th>
             </tr>
@@ -257,7 +303,7 @@ export default function Cases({ onNavigate }: CasesProps) {
         </table>
 
         {filtered.length === 0 && (
-          <div className="empty-state">No cases match your search or filter.</div>
+          <div className="empty-state">No evidence cases match your search or filter.</div>
         )}
       </div>
 

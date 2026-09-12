@@ -9,6 +9,7 @@ import {
   IconCases,
   IconReports,
   IconSettings,
+  IconLogout,
   type IconProps,
 } from './icons';
 
@@ -49,9 +50,10 @@ const NAV_GROUPS: NavGroup[] = [
 interface SidebarProps {
   active: Screen;
   onNavigate: (screen: Screen) => void;
+  onLogout: () => void;
 }
 
-export default function Sidebar({ active, onNavigate }: SidebarProps) {
+export default function Sidebar({ active, onNavigate, onLogout }: SidebarProps) {
   return (
     <aside className="sidebar">
       <div className="brand">
@@ -76,6 +78,13 @@ export default function Sidebar({ active, onNavigate }: SidebarProps) {
           ))}
         </div>
       ))}
+
+      <button type="button" className="nav nav-logout" onClick={onLogout}>
+        <span className="icon">
+          <IconLogout size={18} />
+        </span>
+        Logout
+      </button>
     </aside>
   );
 }

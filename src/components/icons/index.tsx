@@ -104,6 +104,16 @@ export function IconSettings({ size = 18, className = '' }: IconProps) {
   );
 }
 
+export function IconLogout({ size = 18, className = '' }: IconProps) {
+  return (
+    <svg {...base} width={size} height={size} className={className}>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <path d="m16 17 5-5-5-5" />
+      <path d="M21 12H9" />
+    </svg>
+  );
+}
+
 // Small utility icons used inside a few views (search / filter / close),
 // kept in the same lucide outline style for visual consistency.
 export function IconSearch({ size = 16, className = '' }: IconProps) {

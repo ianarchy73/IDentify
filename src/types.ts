@@ -27,3 +27,111 @@ export interface CaseItem {
   status: string;
   timeline: TimelineEvent[];
 }
+
+export interface InvestigationRecord {
+  id: string;
+  profileUrl: string;
+  reason: string;
+  caseLabel: string;
+  analyzedAt: string;
+  risk: RiskLevel;
+  riskLabel: string;
+  riskScore: number;
+  profileImageFinding: string;
+  nameFinding: string;
+  publicInfoFinding: string;
+  behaviorFinding: string;
+}
+
+// --- Image Check gallery ---
+//
+// Every image run through Image Check gets kept here (in addition to
+// whatever case it may be attached to), so the flagged-image set can be
+// reused as reference/training material for future AI analysis instead of
+// being thrown away after a single check.
+
+export interface FlaggedImage {
+  id: string;
+  fileName: string;
+  previewUrl: string;
+  uploadedAt: string; // ISO timestamp
+  risk: RiskLevel;
+  riskLabel: string;
+  faceMatchScore: number; // mocked facial similarity to the user's verified identity image, 0-100
+  manipulationNotes: string;
+  usableForTraining: boolean;
+}
+
+// --- Identity verification (National ID + face verification + monthly re-check) ---
+//
+// Rationale: a hacked/hijacked Facebook account could otherwise keep using
+// the browser extension as if it were the real owner. Re-requiring
+// verification on a schedule limits how long a hijacked session stays
+// trusted, without needing a real backend to enforce session revocation.
+
+export type VerificationStepId = 'national-id' | 'face' | 'review';
+
+export const VERIFICATION_STEPS: VerificationStepId[] = [
+  'national-id',
+  'face',
+  'review',
+];
+
+// How often a verified identity must be re-confirmed.
+export const VERIFICATION_VALIDITY_DAYS = 30;
+
+export type NationalIdType =
+  | 'philsys'
+  | 'drivers-license'
+  | 'passport'
+  | 'umid';
+
+export const NATIONAL_ID_LABELS: Record<NationalIdType, string> = {
+  philsys: 'Philippine National ID (PhilSys)',
+  'drivers-license': "Driver's License",
+  passport: 'Passport',
+  umid: 'UMID',
+};
+
+export interface NationalIdInfo {
+  idType: NationalIdType;
+  idNumber: string;
+  fullNameOnId: string;
+  frontImagePreviewUrl: string | null;
+  holdingIdPreviewUrl: string | null;
+}
+
+export interface FaceVerificationResult {
+  capturedAt: string;
+  selfiePreviewUrl: string | null;
+  comparisonPhotoPreviewUrl: string | null;
+  matchScore: number; // 0-100, mocked comparison against ID/profile photo
+  passed: boolean;
+}
+
+export type IdentityVerificationStatus =
+  | 'unverified'
+  | 'pending'
+  | 'verified'
+  | 'expired';
+
+export interface IdentityVerificationState {
+  status: IdentityVerificationStatus;
+  nationalId: NationalIdInfo | null;
+  face: FaceVerificationResult | null;
+  verifiedAt: string | null;
+  nextDueAt: string | null;
+}
+
+export const createEmptyIdentityVerification = (): IdentityVerificationState => ({
+  status: 'unverified',
+  nationalId: null,
+  face: null,
+  verifiedAt: null,
+  nextDueAt: null,
+});
+
+export function isVerificationOverdue(state: IdentityVerificationState): boolean {
+  if (state.status !== 'verified' || !state.nextDueAt) return false;
+  return new Date(state.nextDueAt).getTime() <= Date.now();
+}
