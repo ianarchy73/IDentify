@@ -1,17 +1,50 @@
-import { createContext, useCallback, useContext, useRef, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 
-const ToastContext = createContext(null);
+export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
-const VALID_TYPES = ['success', 'error', 'warning', 'info'];
+interface ToastState {
+  message: string;
+  visible: boolean;
+  type: ToastType;
+  key: number;
+}
 
-export function ToastProvider({ children }) {
-  const [toast, setToast] = useState({
+interface ToastOptions {
+  type?: ToastType;
+  duration?: number;
+}
+
+type ShowToast = (
+  message: string,
+  typeOrOptions?: ToastType | number | ToastOptions,
+  maybeDuration?: number,
+) => void;
+
+interface ToastContextValue {
+  toast: ToastState;
+  showToast: ShowToast;
+  hideToast: () => void;
+}
+
+const ToastContext = createContext<ToastContextValue | null>(null);
+
+const VALID_TYPES: ToastType[] = ['success', 'error', 'warning', 'info'];
+
+export function ToastProvider({ children }: { children: ReactNode }) {
+  const [toast, setToast] = useState<ToastState>({
     message: '',
     visible: false,
     type: 'success',
     key: 0,
   });
-  const timerRef = useRef(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const keyRef = useRef(0);
 
   const hideToast = useCallback(() => {
@@ -25,8 +58,8 @@ export function ToastProvider({ children }) {
   //   showToast(message, 'error')
   //   showToast(message, 'warning', duration)
   //   showToast(message, { type, duration })
-  const showToast = useCallback((message, typeOrOptions = 'success', maybeDuration) => {
-    let type = 'success';
+  const showToast: ShowToast = useCallback((message, typeOrOptions = 'success', maybeDuration) => {
+    let type: ToastType = 'success';
     let duration = 2200;
 
     if (typeof typeOrOptions === 'number') {
@@ -35,7 +68,7 @@ export function ToastProvider({ children }) {
       type = VALID_TYPES.includes(typeOrOptions) ? typeOrOptions : 'success';
       if (typeof maybeDuration === 'number') duration = maybeDuration;
     } else if (typeOrOptions && typeof typeOrOptions === 'object') {
-      type = VALID_TYPES.includes(typeOrOptions.type) ? typeOrOptions.type : 'success';
+      type = typeOrOptions.type && VALID_TYPES.includes(typeOrOptions.type) ? typeOrOptions.type : 'success';
       if (typeof typeOrOptions.duration === 'number') duration = typeOrOptions.duration;
     }
 

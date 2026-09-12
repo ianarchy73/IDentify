@@ -1,6 +1,16 @@
 import { useToast } from '../components/toast/ToastContext';
+import type { RiskLevel } from '../types';
 
-const MONITORED_TARGETS = [
+interface MonitoredTarget {
+  id: number;
+  name: string;
+  url: string;
+  lastChecked: string;
+  risk: RiskLevel;
+  label: string;
+}
+
+const MONITORED_TARGETS: MonitoredTarget[] = [
   {
     id: 1,
     name: 'example.profile',
@@ -45,23 +55,25 @@ export default function Monitoring() {
           <span className="badge resolved">ACTIVE</span>
         </div>
         <table className="table">
-          <tr>
-            <th>Target</th>
-            <th>Last checked</th>
-            <th>Status</th>
-          </tr>
-          {MONITORED_TARGETS.map((t) => (
-            <tr key={t.id} className="clickable">
-              <td>
-                <b>{t.name}</b>
-                <div className="url">{t.url}</div>
-              </td>
-              <td>{t.lastChecked}</td>
-              <td>
-                <span className={`badge ${t.risk}`}>{t.label}</span>
-              </td>
+          <tbody>
+            <tr>
+              <th>Target</th>
+              <th>Last checked</th>
+              <th>Status</th>
             </tr>
-          ))}
+            {MONITORED_TARGETS.map((t) => (
+              <tr key={t.id} className="clickable">
+                <td>
+                  <b>{t.name}</b>
+                  <div className="url">{t.url}</div>
+                </td>
+                <td>{t.lastChecked}</td>
+                <td>
+                  <span className={`badge ${t.risk}`}>{t.label}</span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
         </table>
       </div>
 

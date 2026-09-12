@@ -1,15 +1,27 @@
 import { useEffect, useRef, useState } from 'react';
 
-export default function CustomSelect({ value, options, onChange, placeholder = 'Select...' }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
+interface Option {
+  value: string;
+  label: string;
+}
 
-  const opts = options.map((o) => (typeof o === 'string' ? { value: o, label: o } : o));
+interface CustomSelectProps {
+  value: string;
+  options: (string | Option)[];
+  onChange: (value: string) => void;
+  placeholder?: string;
+}
+
+export default function CustomSelect({ value, options, onChange, placeholder = 'Select...' }: CustomSelectProps) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const opts: Option[] = options.map((o) => (typeof o === 'string' ? { value: o, label: o } : o));
   const current = opts.find((o) => o.value === value);
 
   useEffect(() => {
-    const onDocClick = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    const onDocClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };
     document.addEventListener('click', onDocClick);
     return () => document.removeEventListener('click', onDocClick);

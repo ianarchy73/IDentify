@@ -1,4 +1,8 @@
-export default function TopBar({ title }) {
+interface TopBarProps {
+  title: string;
+}
+
+export default function TopBar({ title }: TopBarProps) {
   return (
     <header className="top">
       <h2>{title}</h2>

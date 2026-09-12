@@ -4,8 +4,17 @@ import {
   IconCases,
   IconReports,
 } from '../components/icons';
+import type { RiskLevel, Screen } from '../types';
 
-const RECENT_INVESTIGATIONS = [
+interface RecentInvestigation {
+  id: number;
+  title: string;
+  url: string;
+  risk: RiskLevel;
+  status: string;
+}
+
+const RECENT_INVESTIGATIONS: RecentInvestigation[] = [
   {
     id: 1,
     title: 'Possible impersonation',
@@ -29,9 +38,13 @@ const RECENT_INVESTIGATIONS = [
   },
 ];
 
-const RISK_LABEL = { high: 'HIGH', medium: 'MEDIUM', resolved: 'RESOLVED' };
+const RISK_LABEL: Record<RiskLevel, string> = { high: 'HIGH', medium: 'MEDIUM', resolved: 'RESOLVED' };
 
-export default function Dashboard({ onNavigate }) {
+interface DashboardProps {
+  onNavigate: (screen: Screen) => void;
+}
+
+export default function Dashboard({ onNavigate }: DashboardProps) {
   return (
     <section id="dashboard" className="screen active">
       <div className="welcome">

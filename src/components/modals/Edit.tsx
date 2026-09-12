@@ -1,6 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
+import type { CaseItem, RiskLevel } from '../../types';
 
-const RISK_OPTIONS = [
+interface RiskOption {
+  value: RiskLevel;
+  label: string;
+}
+
+const RISK_OPTIONS: RiskOption[] = [
   { value: 'high', label: 'High' },
   { value: 'medium', label: 'Medium' },
   { value: 'resolved', label: 'Resolved' },
@@ -8,22 +14,28 @@ const RISK_OPTIONS = [
 
 const STATUS_OPTIONS = ['Investigating', 'Evidence collected', 'Closed'];
 
-export default function EditCaseModal({ caseItem, onClose, onSave }) {
+interface EditCaseModalProps {
+  caseItem: CaseItem | null;
+  onClose: () => void;
+  onSave: (updated: CaseItem) => void;
+}
+
+export default function EditCaseModal({ caseItem, onClose, onSave }: EditCaseModalProps) {
   const [title, setTitle] = useState(caseItem?.title ?? '');
   const [url, setUrl] = useState(caseItem?.url ?? '');
-  const [risk, setRisk] = useState(caseItem?.risk ?? 'high');
+  const [risk, setRisk] = useState<RiskLevel>(caseItem?.risk ?? 'high');
   const [riskOpen, setRiskOpen] = useState(false);
-  const riskRef = useRef(null);
+  const riskRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState(caseItem?.status ?? STATUS_OPTIONS[0]);
   const [statusOpen, setStatusOpen] = useState(false);
-  const statusRef = useRef(null);
+  const statusRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    function handleClickOutside(e) {
-      if (riskRef.current && !riskRef.current.contains(e.target)) {
+    function handleClickOutside(e: MouseEvent) {
+      if (riskRef.current && !riskRef.current.contains(e.target as Node)) {
         setRiskOpen(false);
       }
-      if (statusRef.current && !statusRef.current.contains(e.target)) {
+      if (statusRef.current && !statusRef.current.contains(e.target as Node)) {
         setStatusOpen(false);
       }
     }
@@ -35,7 +47,7 @@ export default function EditCaseModal({ caseItem, onClose, onSave }) {
 
   const riskLabel = RISK_OPTIONS.find((r) => r.value === risk)?.label ?? '';
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     onSave?.({
       ...caseItem,
