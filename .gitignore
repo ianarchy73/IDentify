@@ -12,6 +12,31 @@ dist
 dist-ssr
 *.local
 
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+
+# Local databases and database artifacts
+*.db
+*.sqlite
+*.sqlite3
+*.dump
+*.sql.bak
+
+# Test and tool output
+coverage
+.nyc_output
+.cache
+.vite
+*.tsbuildinfo
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.orig
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

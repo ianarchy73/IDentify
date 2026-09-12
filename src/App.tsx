@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar';
 import TopBar from './components/TopBar';
 import Toast from './components/toast/Toast';
 import { ToastProvider } from './components/toast/ToastContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Dashboard from './View/Dashboard';
 import Investigation from './View/Investigation';
 import ImageCheck from './View/ImageCheck';
@@ -25,11 +26,11 @@ const TITLES: Record<Screen, string> = {
 };
 
 function AppShell() {
-  const [loggedIn, setLoggedIn] = useState(false);
+  const { isAuthenticated } = useAuth();
   const [screen, setScreen] = useState<Screen>('dashboard');
 
-  if (!loggedIn) {
-    return <Login onLogin={() => setLoggedIn(true)} />;
+  if (!isAuthenticated) {
+    return <Login onLogin={() => {}} />;
   }
 
   const renderScreen = () => {
@@ -67,8 +68,10 @@ function AppShell() {
 
 export default function App() {
   return (
-    <ToastProvider>
-      <AppShell />
-    </ToastProvider>
+    <AuthProvider>
+      <ToastProvider>
+        <AppShell />
+      </ToastProvider>
+    </AuthProvider>
   );
 }

@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "dotenv": "^17.4.2",
+    "mysql2": "^3.24.4",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
