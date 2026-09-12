@@ -1,29 +1,24 @@
 import {
-  EmailLoginRequestSchema,
   FacebookLoginRequestSchema,
   VerifyEmailRequestSchema,
   RefreshTokenRequestSchema,
   LoginResponse,
 } from '../src/schemas/auth';
 import {
+  handleEmailSignup,
   handleEmailLogin,
   handleFacebookLogin,
+  handleFacebookLink,
   handleEmailVerification,
   handleTokenRefresh,
 } from './login';
 
-// Email login endpoint
-export async function POST_emailLogin(email: string): Promise<LoginResponse> {
-  try {
-    const validatedData = EmailLoginRequestSchema.parse({ email });
-    return await handleEmailLogin(validatedData);
-  } catch (error) {
-    return {
-      success: false,
-      message: 'Invalid email format',
-      code: 'INVALID_EMAIL',
-    };
-  }
+export async function POST_emailSignup(data: unknown): Promise<LoginResponse> {
+  return handleEmailSignup(data);
+}
+
+export async function POST_emailLogin(data: unknown): Promise<LoginResponse> {
+  return handleEmailLogin(data);
 }
 
 // Facebook login endpoint
@@ -48,6 +43,10 @@ export async function POST_facebookLogin(
       code: 'FACEBOOK_AUTH_FAILED',
     };
   }
+}
+
+export async function POST_linkFacebook(data: unknown): Promise<LoginResponse> {
+  return handleFacebookLink(data);
 }
 
 // Email verification endpoint

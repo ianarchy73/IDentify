@@ -8,9 +8,29 @@ export const EmailLoginRequestSchema = z.object({
     .string('Email is required')
     .email('Invalid email address')
     .toLowerCase(),
+  password: z
+    .string('Password is required')
+    .min(8, 'Password must be at least 8 characters'),
 });
 
 export type EmailLoginRequest = z.infer<typeof EmailLoginRequestSchema>;
+
+export const EmailSignupRequestSchema = z.object({
+  name: z
+    .string('Name is required')
+    .trim()
+    .min(2, 'Name must be at least 2 characters')
+    .max(255, 'Name is too long'),
+  email: z
+    .string('Email is required')
+    .email('Invalid email address')
+    .toLowerCase(),
+  password: z
+    .string('Password is required')
+    .min(8, 'Password must be at least 8 characters'),
+});
+
+export type EmailSignupRequest = z.infer<typeof EmailSignupRequestSchema>;
 
 /**
  * Facebook Login Schema
@@ -32,6 +52,12 @@ export const FacebookLoginRequestSchema = z.object({
 });
 
 export type FacebookLoginRequest = z.infer<typeof FacebookLoginRequestSchema>;
+
+export const LinkFacebookRequestSchema = FacebookLoginRequestSchema.extend({
+  authToken: z.string('Authentication token is required').min(1),
+});
+
+export type LinkFacebookRequest = z.infer<typeof LinkFacebookRequestSchema>;
 
 /**
  * Unified Login Request - can be either email or facebook
@@ -87,6 +113,9 @@ export const LoginErrorResponseSchema = z.object({
     'INVALID_EMAIL',
     'INVALID_CREDENTIALS',
     'USER_NOT_FOUND',
+    'EMAIL_EXISTS',
+    'FACEBOOK_EXISTS',
+    'DATABASE_ERROR',
     'FACEBOOK_AUTH_FAILED',
     'INVALID_TOKEN',
     'SERVER_ERROR',

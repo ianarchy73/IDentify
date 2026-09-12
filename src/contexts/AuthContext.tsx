@@ -1,12 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { UserProfile } from '../schemas/auth';
-import {
-  POST_emailLogin,
-  POST_facebookLogin,
-  POST_verifyEmail,
-  POST_refreshToken,
-  POST_logout,
-} from '../../backend/routes';
+import type { LoginResponse, UserProfile } from '../schemas/auth';
 
 interface AuthContextType {
   user: UserProfile | null;
@@ -15,8 +8,10 @@ interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   
-  loginWithEmail: (email: string) => Promise<void>;
+  loginWithEmail: (email: string, password: string) => Promise<void>;
+  signupWithEmail: (name: string, email: string, password: string) => Promise<void>;
   loginWithFacebook: (accessToken: string, facebookId: string, email?: string, name?: string) => Promise<void>;
+  linkFacebook: (accessToken: string, facebookId: string, email?: string, name?: string) => Promise<void>;
   verifyEmail: (email: string, code: string) => Promise<void>;
   refreshToken: () => Promise<void>;
   logout: () => Promise<void>;
@@ -35,58 +30,92 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const clearError = useCallback(() => setError(null), []);
 
-  const loginWithEmail = useCallback(async (email: string) => {
+  const request = useCallback(async (path: string, body?: unknown): Promise<LoginResponse> => {
+    const response = await fetch(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body || {}),
+    });
+    return response.json() as Promise<LoginResponse>;
+  }, []);
+
+  const saveLoginResponse = useCallback((response: LoginResponse) => {
+    if (response.success) {
+      setUser(response.user);
+      setToken(response.token);
+      localStorage.setItem('authToken', response.token);
+      if (response.refreshToken) localStorage.setItem('refreshToken', response.refreshToken);
+    } else {
+      setError(response.message);
+    }
+  }, []);
+
+  const loginWithEmail = useCallback(async (email: string, password = '') => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await POST_emailLogin(email);
-      if (response.success) {
-        setUser(response.user);
-        setToken(response.token);
-        localStorage.setItem('authToken', response.token);
-        if (response.refreshToken) {
-          localStorage.setItem('refreshToken', response.refreshToken);
-        }
-      } else {
-        setError(response.message);
-      }
+      saveLoginResponse(await request('/api/auth/login', { email, password }));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Email login failed');
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [request, saveLoginResponse]);
+
+  const signupWithEmail = useCallback(async (name: string, email: string, password: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      saveLoginResponse(await request('/api/auth/signup', { name, email, password }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Account creation failed');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [request, saveLoginResponse]);
 
   const loginWithFacebook = useCallback(
     async (accessToken: string, facebookId: string, email?: string, name?: string) => {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await POST_facebookLogin(accessToken, facebookId, email, name);
-        if (response.success) {
-          setUser(response.user);
-          setToken(response.token);
-          localStorage.setItem('authToken', response.token);
-          if (response.refreshToken) {
-            localStorage.setItem('refreshToken', response.refreshToken);
-          }
-        } else {
-          setError(response.message);
-        }
+        saveLoginResponse(await request('/api/auth/facebook', { accessToken, facebookId, email, name }));
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Facebook login failed');
       } finally {
         setIsLoading(false);
       }
     },
-    []
+    [request, saveLoginResponse]
+  );
+
+  const linkFacebook = useCallback(
+    async (accessToken: string, facebookId: string, email?: string, name?: string) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await request('/api/auth/facebook/link', {
+          authToken: token,
+          accessToken,
+          facebookId,
+          email,
+          name,
+        });
+        saveLoginResponse(response);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Facebook linking failed');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [request, saveLoginResponse, token]
   );
 
   const verifyEmail = useCallback(async (email: string, code: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await POST_verifyEmail(email, code);
+      const response = await request('/api/auth/verify-email', { email, verificationCode: code });
       if (response.success) {
         setUser(response.user);
         setToken(response.token);
@@ -102,14 +131,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [request]);
 
   const refreshToken = useCallback(async () => {
     const refreshToken = localStorage.getItem('refreshToken');
     if (!refreshToken) return;
 
     try {
-      const response = await POST_refreshToken(refreshToken);
+      const response = await request('/api/auth/refresh', { refreshToken });
       if (response.success) {
         setToken(response.token);
         localStorage.setItem('authToken', response.token);
@@ -121,7 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Token refresh failed:', err);
       await logout();
     }
-  }, []);
+  }, [request]);
 
   const logout = useCallback(async () => {
     setUser(null);
@@ -131,7 +160,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
 
     try {
-      await POST_logout();
+      await request('/api/auth/logout');
 
       if (window.FB) {
         await new Promise<void>((resolve) => {
@@ -149,7 +178,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [request]);
 
   // Optionally restore session on mount
   useEffect(() => {
@@ -165,7 +194,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     token,
     isAuthenticated,
     loginWithEmail,
+    signupWithEmail,
     loginWithFacebook,
+    linkFacebook,
     verifyEmail,
     refreshToken,
     logout,

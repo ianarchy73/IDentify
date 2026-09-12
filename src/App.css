@@ -857,6 +857,27 @@ select {
   flex: 1;
 }
 
+.login-switch {
+  display: block;
+  margin: 16px auto 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--blue);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.login-switch:hover,
+.login-switch:focus-visible {
+  text-decoration: underline;
+}
+
+.login-switch:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 /* Custom dropdown */
 .custom-select {
   position: relative;
