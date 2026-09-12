@@ -28,6 +28,25 @@ export interface CaseItem {
   timeline: TimelineEvent[];
 }
 
+// --- Image Check gallery ---
+//
+// Every image run through Image Check gets kept here (in addition to
+// whatever case it may be attached to), so the flagged-image set can be
+// reused as reference/training material for future AI analysis instead of
+// being thrown away after a single check.
+
+export interface FlaggedImage {
+  id: string;
+  fileName: string;
+  previewUrl: string;
+  uploadedAt: string; // ISO timestamp
+  risk: RiskLevel;
+  riskLabel: string;
+  faceMatchScore: number; // mocked facial similarity to the user's verified identity image, 0-100
+  manipulationNotes: string;
+  usableForTraining: boolean;
+}
+
 // --- Identity verification (National ID + face verification + monthly re-check) ---
 //
 // Rationale: a hacked/hijacked Facebook account could otherwise keep using
@@ -64,11 +83,13 @@ export interface NationalIdInfo {
   idNumber: string;
   fullNameOnId: string;
   frontImagePreviewUrl: string | null;
+  holdingIdPreviewUrl: string | null;
 }
 
 export interface FaceVerificationResult {
   capturedAt: string;
   selfiePreviewUrl: string | null;
+  comparisonPhotoPreviewUrl: string | null;
   matchScore: number; // 0-100, mocked comparison against ID/profile photo
   passed: boolean;
 }

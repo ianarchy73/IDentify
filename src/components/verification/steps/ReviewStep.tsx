@@ -49,6 +49,9 @@ export default function ReviewStep({ nationalId, face, onConfirm, onBack }: Revi
         <dt style={{ color: 'var(--muted)', marginTop: 10 }}>ID number</dt>
         <dd style={{ margin: '2px 0 0', fontWeight: 500 }}>{nationalId.idNumber}</dd>
 
+        <dt style={{ color: 'var(--muted)', marginTop: 10 }}>Holding-ID photo</dt>
+        <dd style={{ margin: '2px 0 0', fontWeight: 500 }}>Captured</dd>
+
         <dt style={{ color: 'var(--muted)', marginTop: 10 }}>Face match</dt>
         <dd style={{ margin: '2px 0 0', fontWeight: 500 }}>{face.matchScore}% confidence</dd>
       </dl>
