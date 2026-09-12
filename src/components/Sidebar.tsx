@@ -1,3 +1,5 @@
+import type { ComponentType } from 'react';
+import type { Screen } from '../types';
 import {
   IconLogo,
   IconDashboard,
@@ -7,9 +9,21 @@ import {
   IconCases,
   IconReports,
   IconSettings,
+  type IconProps,
 } from './icons';
 
-const NAV_GROUPS = [
+interface NavItem {
+  id: Screen;
+  label: string;
+  Icon: ComponentType<IconProps>;
+}
+
+interface NavGroup {
+  section: string;
+  items: NavItem[];
+}
+
+const NAV_GROUPS: NavGroup[] = [
   {
     section: 'Overview',
     items: [
@@ -32,7 +46,12 @@ const NAV_GROUPS = [
   },
 ];
 
-export default function Sidebar({ active, onNavigate }) {
+interface SidebarProps {
+  active: Screen;
+  onNavigate: (screen: Screen) => void;
+}
+
+export default function Sidebar({ active, onNavigate }: SidebarProps) {
   return (
     <aside className="sidebar">
       <div className="brand">

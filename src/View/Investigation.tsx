@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useToast } from '../components/toast/ToastContext';
 import CustomSelect from '../components/modals/Dropdown';
+import type { Screen } from '../types';
 
 const REASON_OPTIONS = [
   'Possible impersonation',
@@ -8,7 +9,11 @@ const REASON_OPTIONS = [
   'Suspicious account',
 ];
 
-export default function Investigation({ onNavigate }) {
+interface InvestigationProps {
+  onNavigate?: (screen: Screen) => void;
+}
+
+export default function Investigation({ onNavigate }: InvestigationProps) {
   const showToast = useToast();
   const [profileUrl, setProfileUrl] = useState('');
   const [reason, setReason] = useState('Possible impersonation');

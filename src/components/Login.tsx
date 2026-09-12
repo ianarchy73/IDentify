@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { IconLogo } from './icons';
 
-export default function Login({ onLogin }) {
+interface LoginProps {
+  onLogin: () => void;
+}
+
+export default function Login({ onLogin }: LoginProps) {
   const [email, setEmail] = useState('');
 
   return (

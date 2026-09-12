@@ -1,6 +1,18 @@
 import Modal from './Modal';
 
-const ICON_GLYPH = { default: 'i', danger: '!', success: '\u2713' };
+type ConfirmType = 'default' | 'danger' | 'success';
+
+const ICON_GLYPH: Record<ConfirmType, string> = { default: 'i', danger: '!', success: '\u2713' };
+
+interface ConfirmModalProps {
+  open: boolean;
+  type?: ConfirmType;
+  title?: string;
+  message?: string;
+  confirmText?: string;
+  onConfirm?: () => void;
+  onClose: () => void;
+}
 
 export default function ConfirmModal({
   open,
@@ -10,7 +22,7 @@ export default function ConfirmModal({
   confirmText = 'Confirm',
   onConfirm,
   onClose,
-}) {
+}: ConfirmModalProps) {
   if (!open) return null;
 
   return (
