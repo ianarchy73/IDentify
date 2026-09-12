@@ -1,6 +1,13 @@
 import Modal from './Modal';
+import type { CaseItem } from '../../types';
 
-export default function CaseDetailModal({ caseItem, onClose, onPrepareReport }) {
+interface CaseDetailModalProps {
+  caseItem: CaseItem | null;
+  onClose: () => void;
+  onPrepareReport: (caseItem: CaseItem) => void;
+}
+
+export default function CaseDetailModal({ caseItem, onClose, onPrepareReport }: CaseDetailModalProps) {
   if (!caseItem) return null;
 
   return (

@@ -1,13 +1,13 @@
-import { useToastState } from './ToastContext';
+import { useToastState, type ToastType } from './ToastContext';
 
-const ICON_PATHS = {
+const ICON_PATHS: Record<ToastType, string> = {
   success: 'M5 11.917 9.724 16.5 19 7.5',
   error: 'M6 18 17.94 6M18 18 6.06 6',
   warning: 'M12 13V8m0 8h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
   info: 'M12 17v-6m0-2.5h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
 };
 
-const ICON_LABELS = {
+const ICON_LABELS: Record<ToastType, string> = {
   success: 'Check icon',
   error: 'Error icon',
   warning: 'Warning icon',

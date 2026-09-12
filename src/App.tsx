@@ -8,12 +8,13 @@ import Dashboard from './View/Dashboard';
 import Investigation from './View/Investigation';
 import ImageCheck from './View/ImageCheck';
 import Monitoring from './View/Monitoring';
-import Cases from './view/cases';
+import Cases from './View/Cases';
 import Reports from './View/Reports';
 import Settings from './View/Settings';
+import type { Screen } from './types';
 import './App.css';
 
-const TITLES = {
+const TITLES: Record<Screen, string> = {
   dashboard: 'Dashboard',
   investigate: 'Investigate',
   image: 'Image Check',
@@ -25,7 +26,7 @@ const TITLES = {
 
 function AppShell() {
   const [loggedIn, setLoggedIn] = useState(false);
-  const [screen, setScreen] = useState('dashboard');
+  const [screen, setScreen] = useState<Screen>('dashboard');
 
   if (!loggedIn) {
     return <Login onLogin={() => setLoggedIn(true)} />;

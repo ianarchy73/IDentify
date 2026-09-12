@@ -1,5 +1,15 @@
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { IconClose } from '../icons';
+
+interface ModalProps {
+  title?: ReactNode;
+  onClose: () => void;
+  children: ReactNode;
+  footer?: ReactNode;
+  width?: number;
+  type?: 'default' | 'danger' | 'success';
+  hideHeader?: boolean;
+}
 
 export default function Modal({
   title,
@@ -9,9 +19,9 @@ export default function Modal({
   width = 520,
   type = 'default',
   hideHeader = false,
-}) {
+}: ModalProps) {
   useEffect(() => {
-    const onKey = (e) => {
+    const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     document.addEventListener('keydown', onKey);

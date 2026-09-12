@@ -4,8 +4,9 @@ import CaseDetailModal from '../components/modals/CaseDetailModal';
 import EditCaseModal from '../components/modals/Edit';
 import ConfirmModal from '../components/modals/Confirm';
 import { useToast } from '../components/toast/ToastContext';
+import type { CaseItem, RiskLevel, Screen } from '../types';
 
-const INITIAL_CASES = [
+const INITIAL_CASES: CaseItem[] = [
   {
     id: 'CASE-001',
     title: 'Possible impersonation',
@@ -67,27 +68,36 @@ const INITIAL_CASES = [
   },
 ];
 
-const RISK_FILTERS = [
+interface RiskFilterOption {
+  value: RiskLevel | 'all';
+  label: string;
+}
+
+const RISK_FILTERS: RiskFilterOption[] = [
   { value: 'all', label: 'All risk levels' },
   { value: 'high', label: 'High' },
   { value: 'medium', label: 'Medium' },
   { value: 'resolved', label: 'Resolved' },
 ];
 
-export default function Cases({ onNavigate }) {
+interface CasesProps {
+  onNavigate?: (screen: Screen) => void;
+}
+
+export default function Cases({ onNavigate }: CasesProps) {
   const showToast = useToast();
-  const [cases, setCases] = useState(INITIAL_CASES);
+  const [cases, setCases] = useState<CaseItem[]>(INITIAL_CASES);
   const [query, setQuery] = useState('');
-  const [riskFilter, setRiskFilter] = useState('all');
-  const [activeCase, setActiveCase] = useState(null);
-  const [editingCase, setEditingCase] = useState(null);
-  const [pendingDelete, setPendingDelete] = useState(null);
+  const [riskFilter, setRiskFilter] = useState<RiskLevel | 'all'>('all');
+  const [activeCase, setActiveCase] = useState<CaseItem | null>(null);
+  const [editingCase, setEditingCase] = useState<CaseItem | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<CaseItem | null>(null);
   const [filterOpen, setFilterOpen] = useState(false);
-  const filterRef = useRef(null);
+  const filterRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    function handleClickOutside(e) {
-      if (filterRef.current && !filterRef.current.contains(e.target)) {
+    function handleClickOutside(e: MouseEvent) {
+      if (filterRef.current && !filterRef.current.contains(e.target as Node)) {
         setFilterOpen(false);
       }
     }
@@ -116,7 +126,7 @@ export default function Cases({ onNavigate }) {
     showToast(`${pendingDelete.id} deleted`);
   };
 
-  const handleSaveEdit = (updated) => {
+  const handleSaveEdit = (updated: CaseItem) => {
     setCases((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
     setEditingCase(null);
     showToast(`${updated.id} updated`);
@@ -180,68 +190,70 @@ export default function Cases({ onNavigate }) {
         </div>
 
         <table className="table">
-          <tr>
-            <th>Case</th>
-            <th>Risk</th>
-            <th>Created</th>
-            <th>Status</th>
-            <th></th>
-          </tr>
-          {filtered.map((c) => (
-            <tr key={c.id} className="clickable">
-              <td onClick={() => setActiveCase(c)}>
-                <b>{c.id}</b>
-                <div className="url">{c.title}</div>
-              </td>
-              <td onClick={() => setActiveCase(c)}>
-                <span className={`badge ${c.risk}`}>{c.riskLabel}</span>
-              </td>
-              <td onClick={() => setActiveCase(c)}>{c.created}</td>
-              <td onClick={() => setActiveCase(c)}>{c.status}</td>
-              <td>
-                <div className="row-actions">
-                  <button
-                    type="button"
-                    className="icon-btn icon-btn-primary"
-                    aria-label={`Edit ${c.id}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setEditingCase(c);
-                    }}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none">
-                      <path
-                        d="M16.862 4.487 19.5 7.125M5 19l.938-3.938L15.75 5.25a1.5 1.5 0 0 1 2.121 0l1.879 1.879a1.5 1.5 0 0 1 0 2.121L9.938 19.062 5 19Z"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    className="icon-btn icon-btn-danger"
-                    aria-label={`Delete ${c.id}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setPendingDelete(c);
-                    }}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none">
-                      <path
-                        d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m-8 0 1 13a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2l1-13"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              </td>
+          <tbody>
+            <tr>
+              <th>Case</th>
+              <th>Risk</th>
+              <th>Created</th>
+              <th>Status</th>
+              <th></th>
             </tr>
-          ))}
+            {filtered.map((c) => (
+              <tr key={c.id} className="clickable">
+                <td onClick={() => setActiveCase(c)}>
+                  <b>{c.id}</b>
+                  <div className="url">{c.title}</div>
+                </td>
+                <td onClick={() => setActiveCase(c)}>
+                  <span className={`badge ${c.risk}`}>{c.riskLabel}</span>
+                </td>
+                <td onClick={() => setActiveCase(c)}>{c.created}</td>
+                <td onClick={() => setActiveCase(c)}>{c.status}</td>
+                <td>
+                  <div className="row-actions">
+                    <button
+                      type="button"
+                      className="icon-btn icon-btn-primary"
+                      aria-label={`Edit ${c.id}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingCase(c);
+                      }}
+                    >
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path
+                          d="M16.862 4.487 19.5 7.125M5 19l.938-3.938L15.75 5.25a1.5 1.5 0 0 1 2.121 0l1.879 1.879a1.5 1.5 0 0 1 0 2.121L9.938 19.062 5 19Z"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      className="icon-btn icon-btn-danger"
+                      aria-label={`Delete ${c.id}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPendingDelete(c);
+                      }}
+                    >
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path
+                          d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m-8 0 1 13a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2l1-13"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
         </table>
 
         {filtered.length === 0 && (
