@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { IconLogo } from './icons';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -11,31 +11,13 @@ export default function Login({ onLogin: _onLogin }: LoginProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [facebookError, setFacebookError] = useState<string | null>(null);
-  const { loginWithEmail, signupWithEmail, loginWithFacebook, isLoading, error, clearError } = useAuth();
-
-  useEffect(() => {
-    const appId = import.meta.env.VITE_FACEBOOK_APP_ID;
-    if (!appId || window.FB) return;
-
-    window.fbAsyncInit = () => {
-      window.FB?.init({ appId, cookie: true, xfbml: true, version: 'v21.0' });
-    };
-    const script = document.createElement('script');
-    script.id = 'facebook-jssdk';
-    script.async = true;
-    script.defer = true;
-    script.crossOrigin = 'anonymous';
-    script.src = 'https://connect.facebook.net/en_US/sdk.js';
-    document.body.appendChild(script);
-  }, []);
+  const { loginWithEmail, loginWithFacebook, signupWithEmail, isLoading, error, clearError } = useAuth();
 
   const switchMode = () => {
     setMode(mode === 'login' ? 'signup' : 'login');
     setName('');
     setPassword('');
     clearError();
-    setFacebookError(null);
   };
 
   const handleEmailSubmit = async () => {
@@ -45,30 +27,6 @@ export default function Login({ onLogin: _onLogin }: LoginProps) {
     } else {
       await loginWithEmail(email, password);
     }
-  };
-
-  const handleFacebookLogin = () => {
-    clearError();
-    setFacebookError(null);
-    if (!import.meta.env.VITE_FACEBOOK_APP_ID) {
-      setFacebookError('Facebook login is not configured.');
-      return;
-    }
-    if (!window.FB) {
-      setFacebookError('Facebook login is still loading. Please try again.');
-      return;
-    }
-
-    window.FB.login((response) => {
-      if (response.status !== 'connected' || !response.authResponse) {
-        setFacebookError('Facebook login was cancelled or denied.');
-        return;
-      }
-      const { accessToken, userID } = response.authResponse;
-      window.FB?.api('/me', { fields: 'id,name,email' }, (profile) => {
-        void loginWithFacebook(accessToken, userID, profile.email, profile.name);
-      });
-    }, { scope: 'public_profile,email', auth_type: 'reauthorize' });
   };
 
   return (
@@ -85,19 +43,22 @@ export default function Login({ onLogin: _onLogin }: LoginProps) {
             : 'Detect potential impersonation, preserve evidence, and prepare a response from one place.'}
         </p>
 
-        {(error || facebookError) && (
+        {error && (
           <div style={{ color: '#dc2626', marginBottom: 16, fontSize: 14 }}>
-            {error || facebookError}
+            {error}
           </div>
         )}
 
-        {mode === 'login' && (
-          <button type="button" className="btn primary" style={{ width: '100%', marginTop: 16 }} onClick={handleFacebookLogin} disabled={isLoading}>
-            {isLoading ? 'Loading...' : 'Continue with Facebook'}
-          </button>
-        )}
+        {mode === 'login' && <p style={{ marginTop: 16, fontSize: 13 }}>Demo access: demo@identify.app / identify123</p>}
 
-        {mode === 'login' && <div className="sep">OR</div>}
+        {mode === 'login' && (
+          <>
+            <button type="button" className="btn primary" style={{ width: '100%', marginTop: 16 }} onClick={() => void loginWithFacebook()} disabled={isLoading}>
+              {isLoading ? 'Connecting...' : 'Continue with Facebook'}
+            </button>
+            <div className="sep">OR</div>
+          </>
+        )}
 
         {mode === 'signup' && (
           <input className="input" placeholder="Full name" value={name} onChange={(event) => setName(event.target.value)} disabled={isLoading} />

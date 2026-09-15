@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useToast } from '../components/toast/ToastContext';
 import CustomSelect from '../components/modals/Dropdown';
 import type { Screen } from '../types';
@@ -18,12 +18,25 @@ export default function Investigation({ onNavigate }: InvestigationProps) {
   const [profileUrl, setProfileUrl] = useState('');
   const [reason, setReason] = useState('Possible impersonation');
   const [caseLabel, setCaseLabel] = useState('Possible impersonation');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState(false);
+
+  useEffect(() => {
+    if (!isAnalyzing) return;
+
+    const timer = window.setTimeout(() => {
+      setIsAnalyzing(false);
+      setResult(true);
+      showToast('Analysis complete');
+    }, 5000);
+
+    return () => window.clearTimeout(timer);
+  }, [isAnalyzing, showToast]);
 
   const runInvestigation = () => {
     if (!profileUrl) setProfileUrl('facebook.com/example.profile');
-    setResult(true);
-    showToast('Analysis complete');
+    setResult(false);
+    setIsAnalyzing(true);
   };
 
   return (
@@ -65,10 +78,24 @@ export default function Investigation({ onNavigate }: InvestigationProps) {
           className="btn primary"
           style={{ marginTop: 18 }}
           onClick={runInvestigation}
+          disabled={isAnalyzing}
         >
-          Analyze profile
+          {isAnalyzing ? 'Analyzing...' : 'Analyze profile'}
         </button>
       </div>
+
+      {isAnalyzing && (
+        <div className="investigation-loading" aria-live="polite">
+          <div className="scan-ring" aria-hidden="true">
+            <div className="scan-avatar">EP</div>
+          </div>
+          <div className="scan-copy">
+            <strong>Analyzing profile</strong>
+            <span>Comparing public signals against your identity baseline...</span>
+          </div>
+          <div className="scan-progress" aria-hidden="true"><i /></div>
+        </div>
+      )}
 
       {result && (
         <div className="result">
